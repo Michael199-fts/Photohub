@@ -1,5 +1,4 @@
 from django.db import models
-import datetime
 
 class User(models.Model):
     name = models.CharField(max_length=40, verbose_name="Имя пользователя")
@@ -14,7 +13,7 @@ class Post(models.Model):
     sum_rate = models.SmallIntegerField(default=0, verbose_name="Сумма оценок")
     name = models.CharField(max_length=30, verbose_name="Название")
     author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Автор фото")
-    upload_date = models.DateTimeField(verbose_name="Время загрузки")
+    upload_date = models.DateTimeField(auto_now_add=True, verbose_name="Время загрузки")
 
 class Comment(models.Model):
     text = models.TextField(max_length=300, verbose_name="Текст комментария")
@@ -22,7 +21,7 @@ class Comment(models.Model):
     sum_rate = models.SmallIntegerField(default=0, verbose_name="Сумма оценок")
     author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Автор комментария")
     target = models.ForeignKey(Post, on_delete=models.CASCADE,verbose_name="Пост")
-    upload_date = models.DateTimeField(verbose_name="Время написания")
+    upload_date = models.DateTimeField(auto_now_add=True, verbose_name="Время написания")
 
 class Value_post(models.Model):
     rate = models.SmallIntegerField(verbose_name="Оценка")
