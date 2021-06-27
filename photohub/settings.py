@@ -78,9 +78,9 @@ WSGI_APPLICATION = 'photohub.wsgi.application'
 DATABASES = {
     'default': {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    'NAME': 'photoload',
+    'NAME': 'photohub',
     'USER' : 'postgres',
-    'PASSWORD' : 'zip234yui',
+    'PASSWORD' : '123456',
     'HOST' : '127.0.0.1',
     'PORT' : '5432',
     }
@@ -89,6 +89,8 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
+AUTH_USER_MODEL = 'photoload.User'
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
