@@ -3,6 +3,6 @@ from photoload.views import PostCreateUpdateGet, LoginAPIView, RegistrationAPIVi
 
 urlpatterns = [
     path('post/', PostCreateUpdateGet.as_view()),
-    path('login/', LoginAPIView.as_view()),
-    path('auth/', RegistrationAPIView.as_view()),
+    path('auth/', LoginAPIView.as_view()),
+    path('reg/', RegistrationAPIView.as_view()),
 ]
