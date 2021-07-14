@@ -1,8 +1,8 @@
 from django.urls import path
-from photoload.views import PostCreateUpdateGet, LoginAPIView, RegistrationAPIView
+from photoload.views import PostCreateUpdate, RegistrationAPIView, AuthTokenView
 
 urlpatterns = [
-    path('post/', PostCreateUpdateGet.as_view()),
-    path('auth/', LoginAPIView.as_view()),
+    path('post/', PostCreateUpdate.as_view()),
     path('reg/', RegistrationAPIView.as_view()),
+    path('auth/', AuthTokenView.as_view()),
 ]

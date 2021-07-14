@@ -1,23 +1,21 @@
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from photoload.serializers import PostSerializer, RegistrationSerializer, LoginSerializer
+from photoload.serializers import PostSerializer, RegistrationSerializer
 from rest_framework.response import Response
 from photoload.models import Post
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
 
 
-class PostCreateUpdateGet(ListAPIView):
+class PostCreateUpdate(APIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-
-    def get(self, request):
-        queryset = self.get_queryset()
-        serializer = PostSerializer(queryset, many=True)
-        return Response(serializer.data)
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         queryset = self.get_queryset()
@@ -46,17 +44,25 @@ class RegistrationAPIView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({'token': serializer.data.get('token', None),},status=status.HTTP_201_CREATED,)
+        return Response(status=status.HTTP_201_CREATED,)
 
 
-class LoginAPIView(APIView):
-    permission_classes = [AllowAny]
-    serializer_class = LoginSerializer
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+
+class AuthTokenView(ObtainAuthToken):
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key})
+
+
 #{
 #"username": "",
 #"password": ""
