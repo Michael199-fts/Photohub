@@ -1,18 +1,34 @@
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.generics import DestroyAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from photoload.serializers import PostSerializer, RegistrationSerializer
+from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer
 from rest_framework.response import Response
-from photoload.models import Post
+from photoload.models import Post, User
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+class PersonalAccountView(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PersonalAccountSerializer
 
-class PostCreateUpdate(APIView):
+    def get(self, request, *args, **kwargs):
+        user_fields = User.objects.get(username=request.user)
+        serializer = self.serializer_class(user_fields)
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+class PostCreateUpdate(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
@@ -24,7 +40,7 @@ class PostCreateUpdate(APIView):
         serializer.save()
         return Response(serializer.data)
 
-    def update(self, request):
+    def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = PostSerializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)

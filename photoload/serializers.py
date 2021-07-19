@@ -22,3 +22,9 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ["text", "target", "target_comment", "author"]
+
+
+class PersonalAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'password', 'first_name', 'last_name', 'photo',]
