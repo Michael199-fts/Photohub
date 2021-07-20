@@ -1,9 +1,7 @@
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.generics import DestroyAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
-
 from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer
 from rest_framework.response import Response
 from photoload.models import Post, User
@@ -12,23 +10,29 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
-class PersonalAccountView(RetrieveUpdateDestroyAPIView):
+class PersonalAccountView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PersonalAccountSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         user_fields = User.objects.get(username=request.user)
         serializer = self.serializer_class(user_fields)
         return Response(serializer.data)
 
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+    def put(self, request):
+        instance = User.objects.get(username=request.user)
+        serializer = self.serializer_class(instance, data=request.data)
+        serializer.update(instance, validated_data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK)
 
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
+    def delete(self, request):
+        instance = User.objects.get(username=request.user)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class PostCreateUpdate(RetrieveUpdateDestroyAPIView):
+class PostCreateUpdate(APIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
@@ -40,7 +44,7 @@ class PostCreateUpdate(RetrieveUpdateDestroyAPIView):
         serializer.save()
         return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request):
         instance = self.get_object()
         serializer = PostSerializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)

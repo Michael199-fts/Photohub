@@ -4,7 +4,7 @@ from django.conf import settings
 
 
 class User(AbstractUser):
-    photo = models.ImageField(blank=True, verbose_name="Аватар")
+    photo = models.ImageField(blank=True, verbose_name="Аватар", upload_to='images/')
     id_user = models.AutoField(primary_key=True, unique=True, verbose_name="ID пользователя")
     email = models.EmailField(verbose_name="E-mail", unique=True)
 
