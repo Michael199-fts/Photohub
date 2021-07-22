@@ -1,27 +1,30 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from photoload.models import User, Value_post, Value_comm, Comment, Post
+from photoload.models import User, Comment, Post
 
-class UserSerializer(serializers.ModelSerializer):
+class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["name", "email", "password", "id_user", "photo"]
+        fields = ('email', 'username', 'password',)
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return super(RegistrationSerializer, self).create(validated_data)
 
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ["raters", "sum_rate", "name", "author", "photo"]
+        fields = ["name", "author", "photo"]
 
-class ValuePostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Value_post
-        fields = ["rate", "author", "target"]
-
-class ValueCommSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Value_comm
-        fields = ["rate", "author", "target"]
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ["text", "raters", "sum_rate", "target", "author"]
+        fields = ["text", "target", "target_comment", "author"]
+
+
+class PersonalAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'password', 'first_name', 'last_name', 'photo',]
