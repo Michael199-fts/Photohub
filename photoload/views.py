@@ -10,6 +10,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+
 class PersonalAccountView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PersonalAccountSerializer
@@ -30,29 +31,6 @@ class PersonalAccountView(APIView):
     def delete(self, request):
         instance = User.objects.get(username=request.user)
         instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-class PostCreateUpdate(APIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        queryset = self.get_queryset()
-        serializer = PostSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    def update(self, request):
-        instance = self.get_object()
-        serializer = PostSerializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-    def delete(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -83,6 +61,52 @@ class AuthTokenView(ObtainAuthToken):
         return Response({'token': token.key})
 
 
+class PostListView(APIView):
+    serializer_class = PostSerializer
+
+    def get(self, request):
+        posts = Post.objects.all()
+        serializer = self.serializer_class(posts, many=True)
+        return Response(serializer.data)
+
+
+class PostCreateView(APIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        posts = Post.objects.all()
+        serializer = self.serializer_class(posts, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED,)
+
+
+class PostUpdateDelete(APIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        post = Post.objects.get(id=pk)
+        serializer = self.serializer_class(post)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        instance = Post.objects.get(id=pk)
+        serializer = self.serializer_class(instance, data=request.data)
+        serializer.update(instance, validated_data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        instance = Post.objects.get(id=pk)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 #{
 #"username": "",
 #"password": ""
