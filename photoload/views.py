@@ -1,7 +1,11 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.generics import UpdateAPIView, CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
+
+from photoload.paginator import CustomPagination
 from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer
 from rest_framework.response import Response
 from photoload.models import Post, User
@@ -11,38 +15,28 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 
-class PersonalAccountView(APIView):
+class PersonalAccountView(UpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PersonalAccountSerializer
+    queryset = User.objects.all()
 
-    def get(self, request):
-        user_fields = User.objects.get(username=request.user)
+    def get(self, request, pk):
+        user_fields = User.objects.get(id_user=pk)
         serializer = self.serializer_class(user_fields)
         return Response(serializer.data)
 
-    def put(self, request):
-        instance = User.objects.get(username=request.user)
-        serializer = self.serializer_class(instance, data=request.data)
-        serializer.update(instance, validated_data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK)
-
-    def delete(self, request):
-        instance = User.objects.get(username=request.user)
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, pk):
+        try:
+            instance = User.objects.get(id=pk)
+            instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ObjectDoesNotExist:
+            return Response("Пост не найден", status=status.HTTP_400_BAD_REQUEST)
 
 
-class RegistrationAPIView(APIView):
+class RegistrationAPIView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = RegistrationSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_201_CREATED,)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -63,6 +57,7 @@ class AuthTokenView(ObtainAuthToken):
 
 class PostListView(APIView):
     serializer_class = PostSerializer
+    pagination_class = CustomPagination
 
     def get(self, request):
         posts = Post.objects.all()
@@ -70,7 +65,7 @@ class PostListView(APIView):
         return Response(serializer.data)
 
 
-class PostCreateView(APIView):
+class PostCreateView(CreateAPIView):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
 
@@ -79,34 +74,27 @@ class PostCreateView(APIView):
         serializer = self.serializer_class(posts, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_201_CREATED,)
 
-
-class PostUpdateDelete(APIView):
+class PostUpdateDelete(UpdateAPIView):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Post.objects.all()
 
     def get(self, request, pk):
         post = Post.objects.get(id=pk)
         serializer = self.serializer_class(post)
         return Response(serializer.data)
 
-    def put(self, request, pk):
-        instance = Post.objects.get(id=pk)
-        serializer = self.serializer_class(instance, data=request.data)
-        serializer.update(instance, validated_data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK)
-
     def delete(self, request, pk):
-        instance = Post.objects.get(id=pk)
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            instance = Post.objects.get(id=pk)
+            instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ObjectDoesNotExist:
+            return Response("Пост не найден", status=status.HTTP_400_BAD_REQUEST)
+
+
+
 #{
 #"username": "",
 #"password": ""

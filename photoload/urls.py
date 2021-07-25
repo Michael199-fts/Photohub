@@ -7,6 +7,6 @@ urlpatterns = [
     path('c_post/', PostCreateView.as_view(), name='Создание поста'),
     path('reg/', RegistrationAPIView.as_view(), name='Регистрация'),
     path('auth/', AuthTokenView.as_view(), name='Аутентификация'),
-    path('pa/', PersonalAccountView.as_view(), name='Личный кабинет'),
+    path('pa/<int:pk>', PersonalAccountView.as_view(), name='Личный кабинет'),
     path('posts/', PostListView.as_view(), name='Лист постов'),
 ]
