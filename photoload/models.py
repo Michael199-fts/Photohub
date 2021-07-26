@@ -10,7 +10,7 @@ class User(AbstractUser):
 
 
 class Post(models.Model):
-    photo = models.ImageField(verbose_name="Фото поста")
+    photo = models.ImageField(verbose_name="Фото поста", upload_to='images/')
     name = models.CharField(max_length=30, verbose_name="Название")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Автор фото")
     upload_date = models.DateTimeField(auto_now_add=True, verbose_name="Время загрузки")
