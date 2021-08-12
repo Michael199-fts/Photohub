@@ -1,15 +1,16 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Sum, Avg, F
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.pagination import CursorPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
-
 from photoload.paginator import CustomPagination
-from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer, CommentSerializer
+from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer,\
+    CommentSerializer, RateSerializer, PostCommSerializer
 from rest_framework.response import Response
-from photoload.models import Post, User, Comment
+from photoload.models import Post, User, Comment, Rate
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -31,11 +32,11 @@ class PersonalAccountView(UpdateAPIView):
 
     def delete(self, request, pk):
         try:
-            instance = User.objects.get(id=pk)
+            instance = User.objects.get(id_user=pk)
             instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ObjectDoesNotExist:
-            return Response("Пост не найден", status=status.HTTP_400_BAD_REQUEST)
+            return Response("Пользователь не найден", status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegistrationAPIView(CreateAPIView):
@@ -64,9 +65,45 @@ class PostListView(APIView):
     pagination_class = CustomPagination
 
     def get(self, request):
-        posts = Post.objects.all()
-        serializer = self.serializer_class(posts, many=True)
-        return Response(serializer.data)
+        if request.query_params['sort_by'] == 'low_rating':
+            q = Post.objects.all().annotate(rating=Sum("target__rate"))
+            q = q.order_by('rating')
+            serializer = self.serializer_class(q, many=True)
+            return Response(serializer.data)
+
+        elif request.query_params['sort_by'] == 'high_rating':
+            import pdb
+            pdb.set_trace()
+            q = Post.objects.all().annotate(rating=Sum("target__rate"))
+            q = q.order_by(F('rating').desc(nulls_last=True))
+            serializer = self.serializer_class(q, many=True)
+            return Response(serializer.data)
+
+        elif request.query_params['sort_by'] == 'low_rates':
+            q = Post.objects.all().annotate(rating=Avg("target__rate"))
+            q = q.order_by('rating')
+            serializer = self.serializer_class(q, many=True)
+            return Response(serializer.data)
+
+        elif request.query_params['sort_by'] == 'high_rates':
+            q = Post.objects.all().annotate(rating=Avg("target__rate"))
+            q = q.order_by('-rating')
+            serializer = self.serializer_class(q, many=True)
+            return Response(serializer.data)
+
+
+
+class PostGetView(ListAPIView):
+    queryset = Post.objects.all
+    serializer_class = PostCommSerializer
+
+    def get(self, request, pk):
+        try:
+            post = Post.objects.get(id=pk)
+            serializer = self.serializer_class(post)
+            return Response(serializer.data)
+        except ObjectDoesNotExist:
+            return Response("Пост не найден", status=status.HTTP_400_BAD_REQUEST)
 
 
 class PostCreateView(CreateAPIView):
@@ -74,10 +111,10 @@ class PostCreateView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Post.objects.all()
 
-    def get(self, request):
-        posts = Post.objects.all()
-        serializer = self.serializer_class(posts, many=True)
-        return Response(serializer.data)
+#    def get(self, request):
+#        posts = Post.objects.all()
+#        serializer = self.serializer_class(posts, many=True)
+#        return Response(serializer.data)
 
 
 class PostUpdateDeleteView(UpdateAPIView):
@@ -109,7 +146,7 @@ class CommentListView(ListAPIView):
 
     def get(self, request, pk):
         try:
-            posts = Comment.objects.filter(target=pk)
+            posts = Comment.objects.filter(target=pk, target_comment=None)
             serializer = self.serializer_class(posts, many=True)
             return Response(serializer.data)
         except ObjectDoesNotExist:
@@ -124,8 +161,8 @@ class NestedCommentView(ListAPIView):
 
     def get(self, request, pk):
         try:
-            posts = Comment.objects.filter(target_comment=pk)
-            serializer = self.serializer_class(posts, many=True)
+            comments = Comment.objects.filter(target_comment=pk)
+            serializer = self.serializer_class(comments, many=True)
             return Response(serializer.data)
         except ObjectDoesNotExist:
             return Response("Комментарий не найден", status=status.HTTP_400_BAD_REQUEST)
@@ -156,6 +193,19 @@ class UpdateDeleteCommentView(UpdateAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ObjectDoesNotExist:
             return Response("Комментарий не найден", status=status.HTTP_400_BAD_REQUEST)
+
+
+class RateView(CreateAPIView):
+    serializer_class = RateSerializer
+    queryset = Rate.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 #{
 #"username": "",
 #"password": ""
