@@ -1,6 +1,7 @@
 from django.urls import path
 from photoload.views import PostUpdateDeleteView, RegistrationAPIView, AuthTokenView, PersonalAccountView, \
-    PostListView, PostCreateView, CommentListView, NestedCommentView, CreateCommentView, UpdateDeleteCommentView
+    PostListView, PostCreateView, CommentListView, NestedCommentView, CreateCommentView, UpdateDeleteCommentView, \
+    PostGetView, RateView
 
 urlpatterns = [
     path('post/<int:pk>', PostUpdateDeleteView.as_view(), name='Редактор постов'),
@@ -13,4 +14,6 @@ urlpatterns = [
     path('nested_comments/<int:pk>', NestedCommentView.as_view(), name='Вложенные комментарии'),
     path('c_comment/', CreateCommentView.as_view(), name='Создание комментария'),
     path('comment/<int:pk>', UpdateDeleteCommentView.as_view(), name='Редактор комментария'),
+    path('post_with_comm/<int:pk>', PostGetView.as_view(), name='Просмотр поста'),
+    path('rate', RateView.as_view(), name='Оценка'),
 ]
