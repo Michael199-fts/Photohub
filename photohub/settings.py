@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -66,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
             ],
         },
     },
@@ -136,3 +138,14 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         )
 }
+
+SOCIAL_AUTH_POSTGRES_JSONFIELD_ENABLED = True
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.vk.VKOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = '7926360'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'I7bOWkEufw09EnoIBMdT'
+LOGIN_REDIRECT_URL = '/api/posts/'

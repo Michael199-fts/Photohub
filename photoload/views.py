@@ -65,15 +65,19 @@ class PostListView(APIView):
     pagination_class = CustomPagination
 
     def get(self, request):
-        if request.query_params['sort_by'] == 'low_rating':
+        if 'sort_by' not in request.query_params:
             q = Post.objects.all().annotate(rating=Sum("target__rate"))
-            q = q.order_by('rating')
+            q = q.order_by(F('rating').desc(nulls_last=True))
+            serializer = self.serializer_class(q, many=True)
+            return Response(serializer.data)
+
+        elif request.query_params['sort_by'] == 'low_rating':
+            q = Post.objects.all().annotate(rating=Sum("target__rate"))
+            q = q.order_by('-rating')
             serializer = self.serializer_class(q, many=True)
             return Response(serializer.data)
 
         elif request.query_params['sort_by'] == 'high_rating':
-            import pdb
-            pdb.set_trace()
             q = Post.objects.all().annotate(rating=Sum("target__rate"))
             q = q.order_by(F('rating').desc(nulls_last=True))
             serializer = self.serializer_class(q, many=True)
@@ -210,3 +214,4 @@ class RateView(CreateAPIView):
 #"username": "",
 #"password": ""
 #}
+#https://api.vk.com/method/photos.getAlbums?user_ids=ave_satan199&access_token=a86e0d65de5dec8b895da78604ab80860a5b5d7c8bbce5757d223c76afa05d80d2b4e921030b932cb34b9&v=5.131
