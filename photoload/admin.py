@@ -6,5 +6,5 @@ admin.site.register(Rate)
 admin.site.register(Comment)
 class PostAdmin(admin.ModelAdmin):
     model = Post
-    list_display = ['id', 'name', 'author',]
+    list_display = ['id', 'title', 'author',]
 admin.site.register(Post, PostAdmin)

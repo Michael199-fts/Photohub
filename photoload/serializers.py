@@ -45,7 +45,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class PersonalAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'username', 'password', 'first_name', 'last_name', 'photo',]
+        fields = ['email', 'username', 'password', 'first_name', 'last_name', 'photo', 'id_user',]
         extra_kwargs = {'password': {'write_only': True}}
 
     def update(self, instance, validated_data):

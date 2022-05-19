@@ -5,6 +5,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.pagination import CursorPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.views import APIView
 from photoload.paginator import CustomPagination
 from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer,\
@@ -21,12 +22,14 @@ class PersonalAccountView(UpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PersonalAccountSerializer
     queryset = User.objects.all()
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'personal_account.html'
 
     def get(self, request, pk):
         try:
             user_fields = User.objects.get(id_user=pk)
             serializer = self.serializer_class(user_fields)
-            return Response(serializer.data)
+            return Response({'account' : serializer.data})
         except ObjectDoesNotExist:
             return Response("Пользователь не найден", status=status.HTTP_400_BAD_REQUEST)
 
