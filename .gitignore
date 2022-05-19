@@ -1,2 +1,8 @@
-*.jpg
-*.png
+/photoload/migrations/
+__pycache__
+.idea
+.env
+.python-version
+logs
+public
+/static
