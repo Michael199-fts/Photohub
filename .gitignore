@@ -1,4 +1,3 @@
-/photoload/migrations/
 __pycache__
 .idea
 .env
@@ -6,3 +5,4 @@ __pycache__
 logs
 public
 /static
+/media
