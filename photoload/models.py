@@ -8,7 +8,7 @@ class User(AbstractUser):
     email = models.EmailField(verbose_name="E-mail", unique=True)
     first_name = models.CharField(verbose_name="Имя", max_length=30)
     last_name = models.CharField(verbose_name="Фамилия", max_length=30)
-    age = models.SmallIntegerField()
+    age = models.SmallIntegerField(verbose_name="Возраст", null=True)
 
 
 class Post(models.Model):

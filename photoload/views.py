@@ -17,6 +17,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+from photoload.services.user_registration_service import RegisterUserService
+
 
 class PersonalAccountView(UpdateAPIView):
     permission_classes = [IsAuthenticated]
@@ -45,6 +47,11 @@ class PersonalAccountView(UpdateAPIView):
 class RegistrationAPIView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = RegistrationSerializer
+
+    def post(self, request, *args, **kwargs):
+        result = RegisterUserService.execute({**dict(request.data.items())}, request.FILES.dict())
+        return Response(RegistrationSerializer(result.result).data)
+
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

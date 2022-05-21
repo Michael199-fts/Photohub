@@ -7,12 +7,10 @@ from photoload.models import User, Comment, Post, Rate
 class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'username', 'password',)
+        fields = '__all__'
         extra_kwargs = {'password': {'write_only': True}}
 
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super(RegistrationSerializer, self).create(validated_data)
+
 
 class PostSerializer(serializers.ModelSerializer):
     rate = serializers.SerializerMethodField()

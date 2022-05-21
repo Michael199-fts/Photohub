@@ -3,7 +3,6 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
 django = "*"
 pillow = "*"
@@ -13,6 +12,7 @@ pyjwt = "*"
 django-imagekit = "*"
 djangorestframework = "*"
 psycopg2 = "*"
+django-service-objects = "*"
 
 [dev-packages]
 
