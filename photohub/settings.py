@@ -141,10 +141,7 @@ REST_FRAMEWORK = {
 SOCIAL_AUTH_POSTGRES_JSONFIELD_ENABLED = True
 
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.vk.VKOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
-SOCIAL_AUTH_VK_OAUTH2_KEY = '7926360'
-SOCIAL_AUTH_VK_OAUTH2_SECRET = 'I7bOWkEufw09EnoIBMdT'
 LOGIN_REDIRECT_URL = '/api/posts/'

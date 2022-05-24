@@ -5,15 +5,15 @@ from photoload.views import PostUpdateDeleteView, RegistrationAPIView, AuthToken
 
 urlpatterns = [
     path('post/<int:pk>', PostUpdateDeleteView.as_view(), name='Редактор постов'),
-    path('c_post/', PostCreateView.as_view(), name='Создание поста'),
-    path('reg/', RegistrationAPIView.as_view(), name='Регистрация'),
-    path('auth/', AuthTokenView.as_view(), name='Аутентификация'),
-    path('pa/<int:pk>', PersonalAccountView.as_view(), name='Личный кабинет'),
+    path('create_post/', PostCreateView.as_view(), name='Создание поста'),
+    path('registration/', RegistrationAPIView.as_view(), name='Регистрация'),
+    path('authentication/', AuthTokenView.as_view(), name='Аутентификация'),
+    path('personal_account/<int:pk>', PersonalAccountView.as_view(), name='Личный кабинет'),
     path('posts/', PostListView.as_view(), name='Лист постов'),
     path('comments/<int:pk>', CommentListView.as_view(), name='Комментарии к посту'),
     path('nested_comments/<int:pk>', NestedCommentView.as_view(), name='Вложенные комментарии'),
-    path('c_comment/', CreateCommentView.as_view(), name='Создание комментария'),
-    path('comment/<int:pk>', UpdateDeleteCommentView.as_view(), name='Редактор комментария'),
-    path('post_with_comm/<int:pk>', PostGetView.as_view(), name='Просмотр поста'),
-    path('rate', RateView.as_view(), name='Оценка'),
+    path('create_commentary/', CreateCommentView.as_view(), name='Создание комментария'),
+    path('commentary/<int:pk>', UpdateDeleteCommentView.as_view(), name='Редактор комментария'),
+    path('post_with_commentary/<int:pk>', PostGetView.as_view(), name='Просмотр поста'),
+    path('rate/', RateView.as_view(), name='Оценка'),
 ]

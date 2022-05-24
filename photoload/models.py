@@ -4,11 +4,11 @@ from django.conf import settings
 
 
 class User(AbstractUser):
-    photo = models.ImageField(blank=True, verbose_name="Аватар", upload_to='images/')
+    photo = models.ImageField(blank=True, null=True, verbose_name="Аватар", upload_to='images/')
     email = models.EmailField(verbose_name="E-mail", unique=True)
     first_name = models.CharField(verbose_name="Имя", max_length=30)
     last_name = models.CharField(verbose_name="Фамилия", max_length=30)
-    age = models.SmallIntegerField(verbose_name="Возраст", null=True)
+    age = models.SmallIntegerField(verbose_name="Возраст", null=True, blank=True)
 
 
 class Post(models.Model):
@@ -17,7 +17,7 @@ class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Автор фото")
     upload_date = models.DateTimeField(auto_now_add=True, verbose_name="Время загрузки")
     text = models.TextField(max_length=1000)
-    rating = models.IntegerField()
+    rating = models.IntegerField(null=True)
 
 
 class Comment(models.Model):

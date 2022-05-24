@@ -17,7 +17,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
-from photoload.services.user_registration_service import RegisterUserService
+from photoload.services.user_services.user_registration_service import RegistrationUserService
 
 
 class PersonalAccountView(UpdateAPIView):
@@ -46,12 +46,12 @@ class PersonalAccountView(UpdateAPIView):
 
 class RegistrationAPIView(CreateAPIView):
     permission_classes = [AllowAny]
-    serializer_class = RegistrationSerializer
 
     def post(self, request, *args, **kwargs):
-        result = RegisterUserService.execute({**dict(request.data.items())}, request.FILES.dict())
-        return Response(RegistrationSerializer(result.result).data)
-
+        result = RegistrationUserService.execute({**dict(request.data.items())}, request.FILES.dict())
+        if bool(result.error_report):
+            return Response(result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(RegistrationSerializer(result.result).data, status=status.HTTP_201_CREATED)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
