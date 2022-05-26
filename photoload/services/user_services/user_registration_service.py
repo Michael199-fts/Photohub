@@ -16,7 +16,9 @@ class RegistrationUserService(Service):
     error_report = []
 
     def process(self):
-        if self._run_validations:
+        import pdb
+        pdb.set_trace()
+        if self._is_valid():
             self.result = self._user
         return self
 
@@ -32,21 +34,15 @@ class RegistrationUserService(Service):
             age=self.cleaned_data.get('age')
         )
 
-    @property
-    def _run_validations(self):
+    def _is_valid(self):
         self._checking_the_uniqueness_username()
         self._checking_the_uniqueness_email()
-        if self.error_report:
-            return False
-        else:
-            return True
+        return not bool(self.error_report)
 
     def _checking_the_uniqueness_username(self):
         if User.objects.filter(username=self.cleaned_data.get('username')):
             self.error_report.append('username_not_unique')
-        return self
 
     def _checking_the_uniqueness_email(self):
         if User.objects.filter(email=self.cleaned_data.get('email')):
             self.error_report.append('email_not_unique')
-        return self
