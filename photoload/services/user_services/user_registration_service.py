@@ -17,11 +17,8 @@ class RegistrationUserService(Service):
 
 
     def process(self):
-        user = self._user
-        if self.error_report:
-            self.result = self.error_report
-        else:
-            self.result = user
+        if self.error_report == []:
+            self.result = self._user
         return self
 
 
@@ -44,17 +41,14 @@ class RegistrationUserService(Service):
 
     @property
     def checking_the_uniqueness(self):
-        answer = True
+        check_answer = True
         try:
-            if bool(User.objects.get(username=self.cleaned_data.get('username'))):
+            if bool(User.objects.all().filter(username=self.cleaned_data.get('username'))):
                 self.error_report.append('username_not_unique')
-                answer = False
-        except:
-            pass
-        try:
-            if bool(User.objects.get(email=self.cleaned_data.get('email'))):
+                check_answer = False
+            if bool(User.objects.all().filter(email=self.cleaned_data.get('email'))):
                 self.error_report.append('email_not_unique')
-                answer = False
+                check_answer = False
         except:
             pass
-        return answer
+        return check_answer

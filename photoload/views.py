@@ -48,10 +48,10 @@ class RegistrationAPIView(CreateAPIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        result = RegistrationUserService.execute({**dict(request.data.items())}, request.FILES.dict())
-        if bool(result.error_report):
-            return Response(result.error_report, status=status.HTTP_400_BAD_REQUEST)
-        return Response(RegistrationSerializer(result.result).data, status=status.HTTP_201_CREATED)
+        service_outcome = RegistrationUserService.execute({**dict(request.data.items())}, request.FILES.dict())
+        if bool(service_outcome.error_report):
+            return Response(service_outcome.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(RegistrationSerializer(service_outcome.result).data, status=status.HTTP_201_CREATED)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
