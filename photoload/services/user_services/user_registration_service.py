@@ -13,13 +13,15 @@ class RegistrationUserService(Service):
     password = forms.CharField()
     photo = forms.ImageField(required=False)
     age = forms.CharField(required=False)
-    error_report = []
+
+    validations = ['_checking_the_uniqueness_username', '_checking_the_uniqueness_email']
 
     def process(self):
-        import pdb
-        pdb.set_trace()
-        if self._is_valid():
+        if not self._error_report:
             self.result = self._user
+            self.error_report = []
+        else:
+            self.error_report = self._error_report
         return self
 
     @property
@@ -34,15 +36,18 @@ class RegistrationUserService(Service):
             age=self.cleaned_data.get('age')
         )
 
-    def _is_valid(self):
-        self._checking_the_uniqueness_username()
-        self._checking_the_uniqueness_email()
-        return not bool(self.error_report)
+    @property
+    def _error_report(self):
+        error_report = []
+        for validation in self.validations:
+            if getattr(self, validation)():
+                error_report.append(getattr(self, validation)())
+        return error_report
 
     def _checking_the_uniqueness_username(self):
         if User.objects.filter(username=self.cleaned_data.get('username')):
-            self.error_report.append('username_not_unique')
+            return 'username_not_unique'
 
     def _checking_the_uniqueness_email(self):
         if User.objects.filter(email=self.cleaned_data.get('email')):
-            self.error_report.append('email_not_unique')
+            return 'email_not_unique'
