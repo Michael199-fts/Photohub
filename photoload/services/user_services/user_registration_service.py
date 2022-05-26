@@ -15,40 +15,38 @@ class RegistrationUserService(Service):
     age = forms.CharField(required=False)
     error_report = []
 
-
     def process(self):
-        if self.error_report == []:
+        if self._run_validations:
             self.result = self._user
         return self
 
-
     @property
     def _user(self):
-        if self.checking_the_uniqueness:
-            try:
-                return User.objects.create(
-                    username=self.cleaned_data.get('username'),
-                    first_name=self.cleaned_data.get('first_name'),
-                    last_name=self.cleaned_data.get('last_name'),
-                    email=self.cleaned_data.get('email'),
-                    password=make_password(self.cleaned_data.get('password')),
-                    photo=self.cleaned_data.get('photo'),
-                    age=self.cleaned_data.get('age')
-                )
-            except:
-                self.error_report.append('user_create_err')
-
+        return User.objects.create(
+            username=self.cleaned_data.get('username'),
+            first_name=self.cleaned_data.get('first_name'),
+            last_name=self.cleaned_data.get('last_name'),
+            email=self.cleaned_data.get('email'),
+            password=make_password(self.cleaned_data.get('password')),
+            photo=self.cleaned_data.get('photo'),
+            age=self.cleaned_data.get('age')
+        )
 
     @property
-    def checking_the_uniqueness(self):
-        check_answer = True
-        try:
-            if bool(User.objects.all().filter(username=self.cleaned_data.get('username'))):
-                self.error_report.append('username_not_unique')
-                check_answer = False
-            if bool(User.objects.all().filter(email=self.cleaned_data.get('email'))):
-                self.error_report.append('email_not_unique')
-                check_answer = False
-        except:
-            pass
-        return check_answer
+    def _run_validations(self):
+        self._checking_the_uniqueness_username()
+        self._checking_the_uniqueness_email()
+        if self.error_report:
+            return False
+        else:
+            return True
+
+    def _checking_the_uniqueness_username(self):
+        if User.objects.filter(username=self.cleaned_data.get('username')):
+            self.error_report.append('username_not_unique')
+        return self
+
+    def _checking_the_uniqueness_email(self):
+        if User.objects.filter(email=self.cleaned_data.get('email')):
+            self.error_report.append('email_not_unique')
+        return self
