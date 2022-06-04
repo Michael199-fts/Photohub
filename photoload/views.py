@@ -17,6 +17,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+from photoload.services.posts_services.post_create_service import CreatePostService
 from photoload.services.user_services.user_registration_service import RegistrationUserService
 
 
@@ -48,63 +49,10 @@ class RegistrationAPIView(CreateAPIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        service_outcome = RegistrationUserService.execute({**dict(request.data.items())}, request.FILES.dict())
-        if bool(service_outcome.error_report):
-            return Response(service_outcome.error_report, status=status.HTTP_400_BAD_REQUEST)
-        return Response(RegistrationSerializer(service_outcome.result).data, status=status.HTTP_201_CREATED)
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
-
-
-class AuthTokenView(ObtainAuthToken):
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
-
-
-class PostListView(APIView):
-    serializer_class = PostSerializer
-    pagination_class = CustomPagination
-
-    def get(self, request):
-        if 'sort_by' not in request.query_params:
-            q = Post.objects.all().annotate(rating=Sum("target__rate"))
-            q = q.order_by(F('rating').desc(nulls_last=True))
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'low_rating':
-            q = Post.objects.all().annotate(rating=Sum("target__rate"))
-            q = q.order_by('-rating')
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'high_rating':
-            q = Post.objects.all().annotate(rating=Sum("target__rate"))
-            q = q.order_by(F('rating').desc(nulls_last=True))
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'low_rates':
-            q = Post.objects.all().annotate(rating=Avg("target__rate"))
-            q = q.order_by('rating')
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'high_rates':
-            q = Post.objects.all().annotate(rating=Avg("target__rate"))
-            q = q.order_by('-rating')
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
+        service_result = RegistrationUserService.execute({**dict(request.data.items())}, request.FILES.dict())
+        if bool(service_result.error_report):
+            return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(RegistrationSerializer(service_result.result).data, status=status.HTTP_201_CREATED)
 
 
 class PostGetView(ListAPIView):
@@ -121,14 +69,14 @@ class PostGetView(ListAPIView):
 
 
 class PostCreateView(CreateAPIView):
-    serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Post.objects.all()
 
-#    def get(self, request):
-#        posts = Post.objects.all()
-#        serializer = self.serializer_class(posts, many=True)
-#        return Response(serializer.data)
+    def post(self, request, *args, **kwargs):
+        service_result = CreatePostService.execute({'user':request.user.id, **dict(request.data.items())}, request.FILES.dict())
+        if bool(service_result.error_report):
+            return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(PostSerializer(service_result.result).data, status=status.HTTP_201_CREATED)
+
 
 
 class PostUpdateDeleteView(UpdateAPIView):
