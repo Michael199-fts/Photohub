@@ -1,5 +1,3 @@
-from django.contrib.auth.hashers import make_password
-from django.db.models import Sum
 from rest_framework import serializers
 from photoload.models import User, Comment, Post, Rate
 
@@ -17,7 +15,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     photo_url = serializers.SerializerMethodField()
-
 
     class Meta:
         model = Post

@@ -47,11 +47,11 @@ class RegistrationUserService(Service):
 
     def _checking_the_uniqueness_username(self):
         if User.objects.filter(username=self.cleaned_data.get('username')):
-            return 'username_not_unique'
+            return 'Username_not_unique'
 
     def _checking_the_uniqueness_email(self):
         if User.objects.filter(email=self.cleaned_data.get('email')):
-            return 'email_not_unique'
+            return 'Email_not_unique'
 
     def _checking_missed_fields(self):
         errors = []

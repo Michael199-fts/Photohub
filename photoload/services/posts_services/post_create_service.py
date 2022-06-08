@@ -5,7 +5,7 @@ from photoload.models import Post, User
 
 class CreatePostService(Service):
     title = forms.CharField(initial=None, required=False)
-    user = forms.CharField(initial=None, required=False)
+    user_id = forms.IntegerField(initial=None, required=False)
     text = forms.CharField(initial=None, required=False)
     photo = forms.ImageField(initial=None, required=False)
     validations = ['_checking_missed_fields']
@@ -22,7 +22,7 @@ class CreatePostService(Service):
     def _post(self):
         return Post.objects.create(
             title=self.cleaned_data.get('title'),
-            author=User.objects.get(id=self.cleaned_data.get('user')),
+            author=User.objects.get(id=self.cleaned_data.get('user_id')),
             text=self.cleaned_data.get('text'),
             rating=0,
             photo=self.cleaned_data.get('photo')
