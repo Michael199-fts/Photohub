@@ -4,10 +4,10 @@ from photoload.models import Post, User
 
 
 class CreatePostService(Service):
-    title = forms.CharField(initial=None, required=False)
-    user_id = forms.IntegerField(initial=None, required=False)
-    text = forms.CharField(initial=None, required=False)
-    photo = forms.ImageField(initial=None, required=False)
+    title = forms.CharField(required=False)
+    user_id = forms.IntegerField(required=False)
+    text = forms.CharField(required=False)
+    photo = forms.ImageField(required=False)
     validations = ['_checking_missed_fields']
 
     def process(self):

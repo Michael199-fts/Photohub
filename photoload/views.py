@@ -1,6 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
-from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
+from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, \
+    ListCreateAPIView
 from rest_framework.pagination import CursorPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -13,6 +14,7 @@ from photoload.services.posts_services.post_create_service import CreatePostServ
 from photoload.services.posts_services.post_delete_service import DeletePostService
 from photoload.services.posts_services.post_list_service import GetPostListService
 from photoload.services.posts_services.post_patch_service import UpdatePostService
+from photoload.services.posts_services.post_retrieve_service import GetPostService
 from photoload.services.user_services.user_registration_service import RegistrationUserService
 
 
@@ -50,7 +52,7 @@ class RegistrationAPIView(CreateAPIView):
         return Response(RegistrationSerializer(service_result.result).data, status=status.HTTP_201_CREATED)
 
 
-class PostView(CreateAPIView):
+class PostCreateListAPIView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -65,14 +67,22 @@ class PostView(CreateAPIView):
             return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
         return Response(PostSerializer(service_result.result).data, status=status.HTTP_201_CREATED)
 
+
+class PostRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        service_result = GetPostService.execute({'pk':kwargs.get('pk')})
+        return Response(PostSerializer(service_result.result, many=True).data, status=status.HTTP_200_OK)
+
     def patch(self, request, *args, **kwargs):
-        service_result = UpdatePostService.execute({'user_id':request.user.id, **dict(request.data.items())}, request.FILES.dict())
+        service_result = UpdatePostService.execute({'pk':kwargs.get('pk'), 'user_id':request.user.id, **dict(request.data.items())}, request.FILES.dict())
         if bool(service_result.error_report):
             return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
         return Response(PostSerializer(service_result.result).data, status=status.HTTP_200_OK)
 
     def delete(self, request, *args, **kwargs):
-        service_result = DeletePostService.execute({'user_id':request.user.id, **dict(request.data.items())})
+        service_result = DeletePostService.execute({'pk':kwargs.get('pk'), 'user_id':request.user.id, **dict(request.data.items())})
         if bool(service_result.error_report):
             return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)

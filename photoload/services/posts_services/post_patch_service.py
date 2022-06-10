@@ -4,12 +4,12 @@ from photoload.models import Post
 
 
 class UpdatePostService(Service):
-    id = forms.IntegerField(initial=None, required=False)
-    title = forms.CharField(initial=None, required=False)
-    text = forms.CharField(initial=None, required=False)
-    photo = forms.ImageField(initial=None, required=False)
-    user_id = forms.IntegerField(initial=None, required=False)
-    validations = ['_checking_missed_id', '_checking_author']
+    pk = forms.IntegerField(required=False)
+    title = forms.CharField(required=False)
+    text = forms.CharField(required=False)
+    photo = forms.ImageField(required=False)
+    user_id = forms.IntegerField(required=False)
+    validations = ['_checking_existing_post', '_checking_missed_id', '_checking_author']
     post_fields = ['title', 'text', 'photo']
 
     def process(self):
@@ -22,10 +22,10 @@ class UpdatePostService(Service):
 
     @property
     def _partial_update(self):
-        instance = Post.objects.get(id=self.cleaned_data.get('id'))
+        instance = Post.objects.get(id=self.cleaned_data.get('pk'))
         update_fields = []
         for el, val in self.cleaned_data.items():
-            if el == 'id' or el == 'user_id':
+            if el == 'pk' or el == 'user_id':
                 continue
             else:
                 if el in self.post_fields:
@@ -38,18 +38,27 @@ class UpdatePostService(Service):
     @property
     def _error_report(self):
         error_report = []
-        for validation in self.validations:
-            if getattr(self, validation)():
-                error_report.append(getattr(self, validation)())
-        return error_report
-
+        if not self._checking_existing_post():
+            for validation in self.validations:
+                if getattr(self, validation)():
+                    error_report.append(getattr(self, validation)())
+            return error_report
+        else:
+            error_report.append('Post does not exist')
+            return error_report
 
     def _checking_missed_id(self):
-        if self.cleaned_data.get('id') == '':
+        if self.cleaned_data.get('pk') == '':
             return 'Id missed'
 
 
     def _checking_author(self):
-        instance = Post.objects.get(id=self.cleaned_data.get('id'))
+        instance = Post.objects.get(id=self.cleaned_data.get('pk'))
         if instance.author.id != self.cleaned_data.get('user_id'):
             return 'You cannot change this post'
+
+    def _checking_existing_post(self):
+        try:
+            Post.objects.get(id=self.cleaned_data.get('pk'))
+        except:
+            return 'Post does not exist'

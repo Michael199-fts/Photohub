@@ -6,18 +6,16 @@ from photoload.models import User
 
 
 class RegistrationUserService(Service):
-    username = forms.CharField(initial=None, required=False)
-    first_name = forms.CharField(initial=None, required=False)
-    last_name = forms.CharField(initial=None, required=False)
-    email = forms.EmailField(initial=None,required=False)
-    password = forms.CharField(initial=None, required=False)
-    photo = forms.ImageField(initial=None, required=False)
-    age = forms.IntegerField(initial=None, required=False)
+    username = forms.CharField(required=False)
+    first_name = forms.CharField(required=False)
+    last_name = forms.CharField(required=False)
+    email = forms.EmailField(required=False)
+    password = forms.CharField(required=False)
+    photo = forms.ImageField(required=False)
+    age = forms.IntegerField(required=False)
     validations = ['_checking_the_uniqueness_username', '_checking_the_uniqueness_email', '_checking_missed_fields']
 
     def process(self):
-        import pdb
-        pdb.set_trace()
         if not self._error_report:
             self.result = self._user
             self.error_report = []
