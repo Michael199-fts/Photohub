@@ -1,5 +1,3 @@
-from django.contrib.auth.hashers import make_password
-from django.db.models import Sum
 from rest_framework import serializers
 from photoload.models import User, Comment, Post, Rate
 
@@ -8,23 +6,22 @@ class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'photo': {'use_url': True}
+        }
 
 
 
 class PostSerializer(serializers.ModelSerializer):
-    rate = serializers.SerializerMethodField()
+    photo_url = serializers.SerializerMethodField()
 
-    @staticmethod
-    def get_rate(instance):
-        rat = instance.targets.aggregate(rating=Sum('rate'))
-        if not rat['rating']:
-            return 0
-        else:
-            return rat['rating']
     class Meta:
         model = Post
-        fields = ["name", "author", "photo", "upload_date", "rate",]
+        fields = ["title", "author", "photo_url", "upload_date", "rating", "text"]
+
+    def get_photo_url(self, obj):
+        return 'http://127.0.0.1:8000/media/'+str(obj.photo)
 
 
 class CommentSerializer(serializers.ModelSerializer):

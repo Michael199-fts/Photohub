@@ -6,15 +6,14 @@ from photoload.models import User
 
 
 class RegistrationUserService(Service):
-    username = forms.CharField()
-    first_name = forms.CharField()
-    last_name = forms.CharField()
-    email = forms.EmailField()
-    password = forms.CharField()
+    username = forms.CharField(required=False)
+    first_name = forms.CharField(required=False)
+    last_name = forms.CharField(required=False)
+    email = forms.EmailField(required=False)
+    password = forms.CharField(required=False)
     photo = forms.ImageField(required=False)
-    age = forms.CharField(required=False)
-
-    validations = ['_checking_the_uniqueness_username', '_checking_the_uniqueness_email']
+    age = forms.IntegerField(required=False)
+    validations = ['_checking_the_uniqueness_username', '_checking_the_uniqueness_email', '_checking_missed_fields']
 
     def process(self):
         if not self._error_report:
@@ -46,8 +45,18 @@ class RegistrationUserService(Service):
 
     def _checking_the_uniqueness_username(self):
         if User.objects.filter(username=self.cleaned_data.get('username')):
-            return 'username_not_unique'
+            return 'Username_not_unique'
 
     def _checking_the_uniqueness_email(self):
         if User.objects.filter(email=self.cleaned_data.get('email')):
-            return 'email_not_unique'
+            return 'Email_not_unique'
+
+    def _checking_missed_fields(self):
+        errors = []
+        for el, val in self.cleaned_data.items():
+            if val == '':
+                errors.append(el)
+        if errors == []:
+            return None
+        else:
+            return "Fields missed: " + str(errors)

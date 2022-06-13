@@ -1,22 +1,20 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Sum, Avg, F
 from rest_framework import status
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
+from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, \
+    ListCreateAPIView
 from rest_framework.pagination import CursorPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
-from rest_framework.views import APIView
-from photoload.paginator import CustomPagination
-from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer,\
-    CommentSerializer, RateSerializer, PostCommSerializer
+from photoload.serializers import PostSerializer, RegistrationSerializer, PersonalAccountSerializer, \
+    CommentSerializer, RateSerializer
 from rest_framework.response import Response
-from photoload.models import Post, User, Comment, Rate
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
+from photoload.models import User, Comment, Rate
 
+from photoload.services.posts_services.post_create_service import CreatePostService
+from photoload.services.posts_services.post_delete_service import DeletePostService
+from photoload.services.posts_services.post_list_service import GetPostListService
+from photoload.services.posts_services.post_patch_service import UpdatePostService
+from photoload.services.posts_services.post_retrieve_service import GetPostService
 from photoload.services.user_services.user_registration_service import RegistrationUserService
 
 
@@ -48,109 +46,46 @@ class RegistrationAPIView(CreateAPIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        service_outcome = RegistrationUserService.execute({**dict(request.data.items())}, request.FILES.dict())
-        if bool(service_outcome.error_report):
-            return Response(service_outcome.error_report, status=status.HTTP_400_BAD_REQUEST)
-        return Response(RegistrationSerializer(service_outcome.result).data, status=status.HTTP_201_CREATED)
+        service_result = RegistrationUserService.execute({**dict(request.data.items())}, request.FILES.dict())
+        if bool(service_result.error_report):
+            return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(RegistrationSerializer(service_result.result).data, status=status.HTTP_201_CREATED)
 
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+class PostCreateListAPIView(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
 
-
-class AuthTokenView(ObtainAuthToken):
+    def get(self, request, *args, **kwargs):
+        service_result = GetPostListService.execute({'sort_by':request.query_params.get('sort_by'),
+                                                     'filter_by':request.query_params.get('filter_by'),
+                                                     'filter_value':request.query_params.get('filter_value')})
+        return Response(PostSerializer(service_result.result, many=True).data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+        service_result = CreatePostService.execute({'user_id':request.user.id, **dict(request.data.items())}, request.FILES.dict())
+        if bool(service_result.error_report):
+            return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(PostSerializer(service_result.result).data, status=status.HTTP_201_CREATED)
 
 
-class PostListView(APIView):
-    serializer_class = PostSerializer
-    pagination_class = CustomPagination
-
-    def get(self, request):
-        if 'sort_by' not in request.query_params:
-            q = Post.objects.all().annotate(rating=Sum("target__rate"))
-            q = q.order_by(F('rating').desc(nulls_last=True))
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'low_rating':
-            q = Post.objects.all().annotate(rating=Sum("target__rate"))
-            q = q.order_by('-rating')
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'high_rating':
-            q = Post.objects.all().annotate(rating=Sum("target__rate"))
-            q = q.order_by(F('rating').desc(nulls_last=True))
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'low_rates':
-            q = Post.objects.all().annotate(rating=Avg("target__rate"))
-            q = q.order_by('rating')
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-        elif request.query_params['sort_by'] == 'high_rates':
-            q = Post.objects.all().annotate(rating=Avg("target__rate"))
-            q = q.order_by('-rating')
-            serializer = self.serializer_class(q, many=True)
-            return Response(serializer.data)
-
-
-
-class PostGetView(ListAPIView):
-    queryset = Post.objects.all
-    serializer_class = PostCommSerializer
-
-    def get(self, request, pk):
-        try:
-            post = Post.objects.get(id=pk)
-            serializer = self.serializer_class(post)
-            return Response(serializer.data)
-        except ObjectDoesNotExist:
-            return Response("Пост не найден", status=status.HTTP_400_BAD_REQUEST)
-
-
-class PostCreateView(CreateAPIView):
-    serializer_class = PostSerializer
+class PostRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Post.objects.all()
 
-#    def get(self, request):
-#        posts = Post.objects.all()
-#        serializer = self.serializer_class(posts, many=True)
-#        return Response(serializer.data)
+    def get(self, request, *args, **kwargs):
+        service_result = GetPostService.execute({'pk':kwargs.get('pk')})
+        return Response(PostSerializer(service_result.result, many=True).data, status=status.HTTP_200_OK)
 
+    def patch(self, request, *args, **kwargs):
+        service_result = UpdatePostService.execute({'pk':kwargs.get('pk'), 'user_id':request.user.id, **dict(request.data.items())}, request.FILES.dict())
+        if bool(service_result.error_report):
+            return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(PostSerializer(service_result.result).data, status=status.HTTP_200_OK)
 
-class PostUpdateDeleteView(UpdateAPIView):
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
-    queryset = Post.objects.all()
-
-    def get(self, request, pk):
-        try:
-            post = Post.objects.get(id=pk)
-            serializer = self.serializer_class(post)
-            return Response(serializer.data)
-        except ObjectDoesNotExist:
-            return Response("Пост не найден", status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        try:
-            instance = Post.objects.get(id=pk)
-            instance.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except ObjectDoesNotExist:
-            return Response("Пост не найден", status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, *args, **kwargs):
+        service_result = DeletePostService.execute({'pk':kwargs.get('pk'), 'user_id':request.user.id, **dict(request.data.items())})
+        if bool(service_result.error_report):
+            return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CommentListView(ListAPIView):
