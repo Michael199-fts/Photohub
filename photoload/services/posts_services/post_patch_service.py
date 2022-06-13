@@ -51,7 +51,6 @@ class UpdatePostService(Service):
         if self.cleaned_data.get('pk') == '':
             return 'Id missed'
 
-
     def _checking_author(self):
         instance = Post.objects.get(id=self.cleaned_data.get('pk'))
         if instance.author.id != self.cleaned_data.get('user_id'):

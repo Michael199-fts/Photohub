@@ -15,6 +15,7 @@ from photoload.services.posts_services.post_delete_service import DeletePostServ
 from photoload.services.posts_services.post_list_service import GetPostListService
 from photoload.services.posts_services.post_patch_service import UpdatePostService
 from photoload.services.posts_services.post_retrieve_service import GetPostService
+from photoload.services.rate_services.rate_create_service import CreateRateService
 from photoload.services.user_services.user_registration_service import RegistrationUserService
 
 
@@ -144,17 +145,18 @@ class UpdateDeleteCommentView(UpdateAPIView):
             return Response("Комментарий не найден", status=status.HTTP_400_BAD_REQUEST)
 
 
-class RateView(CreateAPIView):
-    serializer_class = RateSerializer
-    queryset = Rate.objects.all()
+class RateCreateAPIView(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    def post(self, request, *args, **kwargs):
+        service_result = CreateRateService.execute({'post_id':kwargs.get('pk'), 'user_id': request.user.id, **dict(request.data.items())},
+                                                   request.FILES.dict())
+        if bool(service_result.error_report):
+            return Response(service_result.error_report, status=status.HTTP_400_BAD_REQUEST)
+        return Response("Оценка отправлена", status=status.HTTP_201_CREATED)
+
+
+
 #{
 #"username": "",
 #"password": ""
