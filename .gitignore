@@ -1,2 +1,8 @@
-*.jpg
-*.png
+*/__pycache__
+.idea
+.env
+.python-version
+logs
+public
+/static
+/media
