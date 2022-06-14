@@ -36,7 +36,7 @@ class Rate(models.Model):
         (3, 'Хорошо'),
         (4, 'Легендарно'),
     )
-    rate = models.SmallIntegerField(choices=CHOICES, default='2')
+    value = models.SmallIntegerField(choices=CHOICES, default='2')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Автор оценки")
-    target = models.ForeignKey(Post, on_delete=models.CASCADE, verbose_name="Пост",
+    target_post = models.ForeignKey(Post, on_delete=models.CASCADE, verbose_name="Пост",
                                related_name="targets", related_query_name="target")

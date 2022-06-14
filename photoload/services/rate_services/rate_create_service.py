@@ -4,7 +4,7 @@ from photoload.models import User, Rate, Post
 
 
 class CreateRateService(Service):
-    rate = forms.IntegerField(required=False)
+    value = forms.IntegerField(required=False)
     user_id = forms.IntegerField(required=False)
     post_id = forms.CharField(required=False)
     validations = ['_checking_missed_fields', '_checking_existing_post', '_checking_existing_rate']
@@ -20,12 +20,12 @@ class CreateRateService(Service):
     @property
     def _rate(self):
         instance = Post.objects.get(id=self.cleaned_data.get('post_id'))
-        instance.rating += self.cleaned_data.get('rate')
+        instance.rating += self.cleaned_data.get('value')
         instance.save()
         return Rate.objects.create(
-            rate=self.cleaned_data.get('rate'),
+            value=self.cleaned_data.get('value'),
             author=User.objects.get(id=self.cleaned_data.get('user_id')),
-            target=Post.objects.get(id=self.cleaned_data.get('post_id')),
+            target_post=Post.objects.get(id=self.cleaned_data.get('post_id')),
         )
 
     @property
@@ -54,7 +54,7 @@ class CreateRateService(Service):
 
     def _checking_existing_rate(self):
         try:
-            Rate.objects.get(author=self.cleaned_data.get('user_id'), target=self.cleaned_data.get('post_id'))
+            Rate.objects.get(author=self.cleaned_data.get('user_id'), target_post=self.cleaned_data.get('post_id'))
             return "Оценка уже поставлена"
         except:
             pass
