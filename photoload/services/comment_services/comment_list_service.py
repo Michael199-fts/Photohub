@@ -7,6 +7,7 @@ class GetCommentListService(Service):
     sort_by = forms.CharField(required=False)
     filter_by = forms.CharField(required=False)
     filter_value = forms.CharField(required=False)
+    nested_flag = forms.BooleanField(required=False)
     pk = forms.CharField(required=False)
     sorting_values = ['upload_date', '-upload_date', 'author_username', '-author_username']
     filter_values = ['author_id', 'author_username', 'upload_date']
@@ -18,7 +19,11 @@ class GetCommentListService(Service):
 
     @property
     def _comment(self):
-        query = Comment.objects.all().filter(target = Post.objects.get(id=self.cleaned_data.get('pk')))
+        query = Comment.objects.all()
+        if self.cleaned_data.get('nested_flag'):
+            query.filter(target_comment_id=self.cleaned_data.get('pk'))
+        else:
+            query.filter(target_id=self.cleaned_data.get('pk'))
         if self.cleaned_data.get('filter_by'):
             if self.cleaned_data.get('filter_by') in self.filter_values:
                 if self.cleaned_data.get('filter_value'):

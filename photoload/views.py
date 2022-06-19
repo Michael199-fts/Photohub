@@ -85,7 +85,8 @@ class CommentCreateListAPIView(ListCreateAPIView):
         service_result = GetCommentListService.execute({'pk':kwargs.get('pk'),
                                                     'sort_by':request.query_params.get('sort_by'),
                                                      'filter_by':request.query_params.get('filter_by'),
-                                                     'filter_value':request.query_params.get('filter_value')})
+                                                     'filter_value':request.query_params.get('filter_value'),
+                                                    'nested_flag':request.query_params.get('nested_flag')})
         return Response(CommentSerializer(service_result.result, many=True).data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
