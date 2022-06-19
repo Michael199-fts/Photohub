@@ -6,7 +6,7 @@ urlpatterns = [
     path('post/<int:pk>/', PostRetrieveUpdateDestroyAPIView.as_view()),
     path('post/', PostCreateListAPIView.as_view()),
     path('registration/', RegistrationAPIView.as_view()),
-    path('comment_list/<int:pk>/', CommentCreateListAPIView.as_view()),
-    path('comment/<int:pk>/', CommentRetrieveUpdateDestroyAPIView.as_view()),
-    path('rate/<int:pk>/', RateCreateAPIView.as_view()),
+    path('post/<int:pk>/comments/', CommentCreateListAPIView.as_view()),
+    path('post/<int:post>/comments/<int:pk>/', CommentRetrieveUpdateDestroyAPIView.as_view()),
+    path('post/<int:pk>/rate/', RateCreateAPIView.as_view()),
 ]

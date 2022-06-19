@@ -35,7 +35,6 @@ class CreateCommentService(Service):
         return Comment.objects.create(
             text=self.cleaned_data.get('text'),
             author=User.objects.get(id=self.cleaned_data.get('user_id')),
-            target=Post.objects.get(id=self.cleaned_data.get('post_id')),
             target_comment=Comment.objects.get(id=self.cleaned_data.get('target_comment'))
         )
 
