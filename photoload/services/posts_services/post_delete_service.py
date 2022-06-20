@@ -9,8 +9,6 @@ class DeletePostService(Service):
     validations = ['_checking_existing_post', '_checking_missed_id', '_checking_author']
 
     def process(self):
-        import pdb
-        pdb.set_trace()
         if not self._error_report:
             self._delete()
             self.error_report = []

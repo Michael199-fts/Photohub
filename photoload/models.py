@@ -23,7 +23,8 @@ class Post(models.Model):
 class Comment(models.Model):
     text = models.TextField(max_length=300, verbose_name="Текст комментария")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Автор комментария")
-    target = models.ForeignKey(Post, on_delete=models.CASCADE, verbose_name="Пост", related_name="comment")
+    target = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Пост",
+                               related_name="comment")
     target_comment = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True,
                                        verbose_name="Комментарий", related_name="nested_comment")
     upload_date = models.DateTimeField(auto_now_add=True, verbose_name="Время написания")
